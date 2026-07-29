@@ -7,6 +7,7 @@ import {
   FaDownload
 } from "react-icons/fa";
 import './App.css'
+import bgVideo from './assets/mantis.mp4'
 
 function App() {
   const typedTextRef = useRef(null)
@@ -327,6 +328,19 @@ function App() {
 
       {/* FIXED BACKGROUND */}
       <div className="fixed-bg" aria-hidden="true"></div>
+
+      {/* FIXED BACKGROUND VIDEO */}
+<div className="fixed-bg" aria-hidden="true">
+  <video
+    className="bg-video"
+    autoPlay
+    loop
+    muted
+    playsInline
+  >
+    <source src={bgVideo} type="video/mp4" />
+  </video>
+</div>
 
       {/* AMBIENT BACKGROUND BLOBS */}
       <div className="ambient-blobs" aria-hidden="true">

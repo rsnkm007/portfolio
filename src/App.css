@@ -34,14 +34,20 @@
 
 .fixed-bg {
   position: fixed;
-  inset: 0;
-  z-index: -10;
-  background-image: url("./assets/mantis.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  inset: 0; /* Cover entire viewport */
+  width: 100vw;
+  height: 100vh;
+  z-index: -10; /* Keep it behind all cards and content */
+  overflow: hidden;
   pointer-events: none;
   transform: translateZ(0);
+}
+
+.bg-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Stretches and crops video to fill full screen without distorting */
+  object-position: center;
 }
 
 html {

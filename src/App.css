@@ -19,6 +19,11 @@
   --glass-border: rgba(255, 255, 255, 0.45);
   --hairline: rgba(0, 0, 0, 0.08);
 
+  /* Fallback (no backdrop-filter support) materials — more opaque so panels
+     still read as intentional "glass" cards instead of flat transparent boxes */
+  --glass-bg-fallback: rgba(255, 255, 255, 0.86);
+  --glass-bg-strong-fallback: rgba(255, 255, 255, 0.92);
+
   --text-dark: #1d1d1f;
   --text-muted: #4b4b4f;
   --text-tertiary: #86868b;
@@ -163,6 +168,18 @@ nav {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  /* Forces its own stacking/compositing context so Chrome samples the fixed
+     background reliably instead of silently skipping the blur */
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+/* Browsers with zero backdrop-filter support (very old Firefox/Edge) fall
+   back to a solid-enough card so it still reads as "glass", just without blur */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  nav {
+    background: var(--glass-bg-strong-fallback);
+  }
 }
 
 .window-controls {
@@ -311,6 +328,14 @@ nav {
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
   --mx: 50%;
   --my: 50%;
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .introduction-container-main {
+    background-color: var(--glass-bg-fallback);
+  }
 }
 
 /* Cursor-follow spotlight */
@@ -517,6 +542,14 @@ nav {
   transition: background-color 0.5s ease-in;
   margin: 32px auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-section {
+    background-color: var(--glass-bg-fallback);
+  }
 }
 
 .glass-section:hover {
@@ -1134,7 +1167,7 @@ footer {
   position: fixed;
   bottom: 18px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateZ(0);
   z-index: 200;
   display: flex;
   align-items: flex-end;
@@ -1146,6 +1179,13 @@ footer {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  isolation: isolate;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .mac-dock {
+    background: var(--glass-bg-strong-fallback);
+  }
 }
 
 .dock-icon {
@@ -1220,6 +1260,7 @@ footer {
   height: 42px;
   background: var(--glass-bg-strong);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--glass-border);
   color: var(--text-dark);
   font-weight: bold;
@@ -1232,6 +1273,13 @@ footer {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
   transition: opacity 0.3s, transform 0.3s var(--ease-spring);
   z-index: 200;
+  isolation: isolate;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #scrollTop {
+    background: var(--glass-bg-strong-fallback);
+  }
 }
 
 #scrollTop.show {

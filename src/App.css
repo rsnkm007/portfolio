@@ -7,20 +7,16 @@
 }
 
 :root {
-  /* Apple system green, refined */
   --accent: #2fae56;
   --accent-bright: #34c759;
   --accent-blue: #0071e3;
 
-  /* Vibrancy materials */
   --glass-bg: rgba(255, 255, 255, 0.5);
   --glass-bg-strong: rgba(255, 255, 255, 0.68);
   --glass-bg-hover: rgba(52, 199, 89, 0.22);
   --glass-border: rgba(255, 255, 255, 0.45);
   --hairline: rgba(0, 0, 0, 0.08);
 
-  /* Fallback (no backdrop-filter support) materials — more opaque so panels
-     still read as intentional "glass" cards instead of flat transparent boxes */
   --glass-bg-fallback: rgba(255, 255, 255, 0.86);
   --glass-bg-strong-fallback: rgba(255, 255, 255, 0.92);
 
@@ -35,11 +31,6 @@
   --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* ── FIXED BACKGROUND LAYER ──
-   Real position:fixed element instead of body's background-attachment:fixed.
-   Chrome cannot correctly blur a background-attachment:fixed image behind
-   backdrop-filter elements — it silently renders flat with no blur. A real
-   fixed element composites correctly in every browser. */
 .fixed-bg {
   position: fixed;
   inset: 0;
@@ -83,7 +74,6 @@ section {
   position: relative;
 }
 
-/* ── SCROLL PROGRESS BAR ── */
 .scroll-progress-track {
   position: fixed;
   top: 0;
@@ -102,7 +92,6 @@ section {
   transition: width 0.12s linear;
 }
 
-/* ── AMBIENT BACKGROUND BLOBS ── */
 .ambient-blobs {
   position: fixed;
   inset: 0;
@@ -161,7 +150,7 @@ section {
   50% { transform: translate(50px, -60px) scale(1.2); }
 }
 
-/* ── MENU BAR (floating, macOS-style vibrancy pill) ── */
+/* ── MENU BAR ── */
 nav {
   position: sticky;
   top: 14px;
@@ -176,27 +165,13 @@ nav {
   padding: 10px 22px;
   border-radius: 980px;
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
-  /* NOTE: no transform: translateZ(0) here — that forces a separate GPU
-     compositing layer which breaks Chrome's backdrop-filter sampling of the
-     fixed background behind it. isolation:isolate alone is enough for
-     correct stacking without hurting the blur. */
   isolation: isolate;
 }
 
-/* ── BULLETPROOF FROSTED-GLASS LAYER ──
-   backdrop-filter is unreliable across Chrome installs (depends on GPU
-   compositing/hardware acceleration settings that vary per machine). This
-   pseudo-element guarantees the frosted look everywhere by blurring its OWN
-   painted content with `filter: blur()` instead of trying to sample what's
-   behind the element. filter has none of backdrop-filter's compositing
-   quirks — it just works, on every browser, every device, every laptop.
-   z-index:-1 keeps it behind real content (text, icons) but above the
-   element's own background-color, and border-radius:inherit keeps the
-   rounded pill shape matching without needing overflow:hidden anywhere. */
 nav::after {
   content: '';
   position: absolute;
@@ -206,12 +181,10 @@ nav::after {
   background:
     linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
     url("./assets/NKM.png") center / cover no-repeat;
-  filter: blur(24px) saturate(180%);
+  filter: blur(15px);
   pointer-events: none;
 }
 
-/* Browsers with zero backdrop-filter support (very old Firefox/Edge) fall
-   back to a solid-enough card so it still reads as "glass", just without blur */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   nav {
     background: var(--glass-bg-strong-fallback);
@@ -282,7 +255,6 @@ nav::after {
   transform: scaleX(1);
 }
 
-/* ── SCROLL REVEAL ── */
 .reveal {
   opacity: 0;
   transform: translateY(30px) scale(0.98);
@@ -308,7 +280,6 @@ nav::after {
 .stagger-children.visible > *:nth-child(4) { opacity: 1; transform: none; transition-delay: 0.35s; }
 .stagger-children.visible > *:nth-child(5) { opacity: 1; transform: none; transition-delay: 0.45s; }
 
-/* ── HERO (presented as an app window) ── */
 .open-opportunity {
   display: inline-block;
   background-color: var(--accent-bright);
@@ -367,17 +338,12 @@ nav::after {
   isolation: isolate;
 }
 
-/* Bulletproof frosted layer — see nav::after comment above for why this
-   exists instead of relying solely on backdrop-filter. Uses ::after since
-   ::before is already used for the cursor spotlight below. */
-
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .introduction-container-main {
     background-color: var(--glass-bg-fallback);
   }
 }
 
-/* Cursor-follow spotlight */
 .introduction-container-main::before {
   content: '';
   position: absolute;
@@ -392,7 +358,6 @@ nav::after {
   opacity: 1;
 }
 
-/* Title bar to reinforce the "app window" feel */
 .window-titlebar {
   display: flex;
   align-items: center;
@@ -571,7 +536,6 @@ nav::after {
   transform: translateY(-3px) scale(1.06);
 }
 
-/* ── GLASS SECTION (shared by all other sections) ── */
 .glass-section {
   position: relative;
   background-color: var(--glass-bg);
@@ -584,8 +548,6 @@ nav::after {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
   isolation: isolate;
 }
-
-/* Bulletproof frosted layer — see nav::after comment above */
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-section {
@@ -618,7 +580,6 @@ nav::after {
   margin-bottom: 1.5rem;
 }
 
-/* ── ABOUT ── */
 .about-grid {
   display: grid;
   grid-template-columns: 140px 1fr;
@@ -693,7 +654,6 @@ nav::after {
   color: var(--text-muted);
 }
 
-/* ── SKILLS (segmented-control style capsules) ── */
 .skills-categories {
   display: flex;
   flex-direction: column;
@@ -740,7 +700,6 @@ nav::after {
   padding: 4px 11px;
 }
 
-/* ── EXPERIENCE ── */
 .timeline {
   position: relative;
   padding-left: 1.5rem;
@@ -821,7 +780,6 @@ nav::after {
   line-height: 1.5;
 }
 
-/* ── PROJECTS (App Store style cards) ── */
 .projects-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -939,7 +897,6 @@ nav::after {
   transform: none;
 }
 
-/* ── EDUCATION ── */
 .edu-grid {
   display: flex;
   flex-direction: column;
@@ -994,7 +951,6 @@ nav::after {
   transform: scale(1.08);
 }
 
-/* ── CERTIFICATIONS ── */
 .certs-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1044,7 +1000,6 @@ nav::after {
   color: var(--accent);
 }
 
-/* ── CONTACT (iOS Settings-style grouped list) ── */
 .contact-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1195,7 +1150,6 @@ nav::after {
   cursor: not-allowed;
 }
 
-/* ── FOOTER ── */
 footer {
   text-align: center;
   padding: 2rem 2rem 7rem;
@@ -1203,7 +1157,6 @@ footer {
   color: var(--text-tertiary);
 }
 
-/* ── DOCK (macOS-style bottom navigation) ── */
 .mac-dock {
   position: fixed;
   bottom: 18px;
@@ -1216,18 +1169,13 @@ footer {
   padding: 10px 12px;
   border-radius: 26px;
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border: 1px solid var(--glass-border);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
   isolation: isolate;
 }
 
-/* Bulletproof frosted layer — see nav::after comment above. z-index:-1 keeps
-   this behind the dock-icon buttons; since the pseudo is exactly inset:0
-   (same size as .mac-dock, no overscan), it never needs overflow:hidden —
-   which matters here because dock-tooltip intentionally pops up ABOVE the
-   dock's own bounds and must not be clipped. */
 .mac-dock::after {
   content: '';
   position: absolute;
@@ -1237,7 +1185,7 @@ footer {
   background:
     linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
     url("./assets/NKM.png") center / cover no-repeat;
-  filter: blur(24px) saturate(180%);
+  filter: blur(15px);
   pointer-events: none;
 }
 
@@ -1310,7 +1258,6 @@ footer {
   transform: translateX(-50%) translateY(0);
 }
 
-/* ── SCROLL TO TOP ── */
 #scrollTop {
   position: fixed;
   bottom: 92px;
@@ -1318,8 +1265,8 @@ footer {
   width: 42px;
   height: 42px;
   background: var(--glass-bg-strong);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border: 1px solid var(--glass-border);
   color: var(--text-dark);
   font-weight: bold;
@@ -1335,7 +1282,6 @@ footer {
   isolation: isolate;
 }
 
-/* Bulletproof frosted layer — see nav::after comment above */
 #scrollTop::after {
   content: '';
   position: absolute;
@@ -1345,7 +1291,7 @@ footer {
   background:
     linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
     url("./assets/NKM.png") center / cover no-repeat;
-  filter: blur(18px) saturate(180%);
+  filter: blur(15px);
   pointer-events: none;
 }
 
@@ -1367,7 +1313,6 @@ footer {
   transform: translateY(-4px) scale(1.08);
 }
 
-/* ── RESPECT REDUCED MOTION ── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

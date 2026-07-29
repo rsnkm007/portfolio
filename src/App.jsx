@@ -80,7 +80,6 @@ function App() {
       .querySelectorAll('.reveal, .reveal-left, .reveal-right, .stagger-children')
       .forEach((el) => revealObserver.observe(el))
 
-    // Timeline items get their own observer so the connecting line can "draw" in
     const timelineObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -228,7 +227,6 @@ function App() {
     const message = e.target.message.value
     const body = `Name: ${name}\n\nEmail: ${email}\n\nMessage:\n${message}`
 
-    // Requires the EmailJS SDK on window (add the script tag in index.html)
     if (window.emailjs) {
       setSending(true)
       window.emailjs.init({ publicKey: 'cthc9fnb-RXexLO8L' })
@@ -265,7 +263,6 @@ function App() {
     { id: 'contact', label: 'Contact' },
   ]
 
-  // Dock items — the app's "home screen" shortcuts
   const dockItems = [
     { id: 'home', label: 'Home', icon: '🏠' },
     { id: 'about', label: 'About', icon: '🙂' },
@@ -328,9 +325,8 @@ function App() {
         <div className="scroll-progress-bar" ref={progressRef}></div>
       </div>
 
-      {/* FIXED BACKGROUND — replaces body's background-attachment:fixed,
-    which Chrome can't blur correctly with backdrop-filter */}
-<div className="fixed-bg" aria-hidden="true"></div>
+      {/* FIXED BACKGROUND */}
+      <div className="fixed-bg" aria-hidden="true"></div>
 
       {/* AMBIENT BACKGROUND BLOBS */}
       <div className="ambient-blobs" aria-hidden="true">
@@ -339,7 +335,7 @@ function App() {
         <span className="blob blob-3"></span>
       </div>
 
-      {/* MENU BAR — floating vibrancy pill, macOS-style */}
+      {/* MENU BAR */}
       <nav>
         <div className="window-controls" aria-hidden="true">
           <span className="dot dot-red"></span>
@@ -365,7 +361,7 @@ function App() {
         </ul>
       </nav>
 
-      {/* HERO — presented as an app window */}
+      {/* HERO */}
       <section id="home">
         <div className="introduction-container-main" ref={heroRef}>
           <div className="window-titlebar">
@@ -490,7 +486,7 @@ function App() {
         </div>
       </section>
 
-      {/* SKILLS — segmented-control style capsules */}
+      {/* SKILLS */}
       <section id="skills">
         <div className="glass-section reveal">
           <div className="glass-section-inner">
@@ -604,7 +600,7 @@ function App() {
         </div>
       </section>
 
-      {/* PROJECTS — App Store style cards */}
+      {/* PROJECTS */}
       <section id="projects">
         <div className="glass-section reveal">
           <div className="glass-section-inner">
@@ -702,7 +698,7 @@ function App() {
         </div>
       </section>
 
-      {/* CONTACT — iOS Settings-style grouped list */}
+      {/* CONTACT */}
       <section id="contact">
         <div className="glass-section reveal">
           <div className="glass-section-inner contact-grid">
@@ -765,7 +761,7 @@ function App() {
         </p>
       </footer>
 
-      {/* DOCK — macOS-style app dock for navigation */}
+      {/* DOCK */}
       <div className="mac-dock" role="navigation" aria-label="Section shortcuts">
         {dockItems.map((item) => (
           <button

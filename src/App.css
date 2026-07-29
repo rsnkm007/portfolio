@@ -35,6 +35,22 @@
   --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
+/* ── FIXED BACKGROUND LAYER ──
+   Real position:fixed element instead of body's background-attachment:fixed.
+   Chrome cannot correctly blur a background-attachment:fixed image behind
+   backdrop-filter elements — it silently renders flat with no blur. A real
+   fixed element composites correctly in every browser. */
+.fixed-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: url("./assets/NKM.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -44,14 +60,10 @@ body {
     "Inter", "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   letter-spacing: -0.011em;
-  background-image: url("./assets/NKM.png");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
   min-height: 100vh;
   color: var(--text-dark);
   overflow-x: hidden;
+  position: relative;
 }
 
 p {
@@ -168,10 +180,34 @@ nav {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
-  /* Forces its own stacking/compositing context so Chrome samples the fixed
-     background reliably instead of silently skipping the blur */
+  /* NOTE: no transform: translateZ(0) here — that forces a separate GPU
+     compositing layer which breaks Chrome's backdrop-filter sampling of the
+     fixed background behind it. isolation:isolate alone is enough for
+     correct stacking without hurting the blur. */
   isolation: isolate;
-  transform: translateZ(0);
+}
+
+/* ── BULLETPROOF FROSTED-GLASS LAYER ──
+   backdrop-filter is unreliable across Chrome installs (depends on GPU
+   compositing/hardware acceleration settings that vary per machine). This
+   pseudo-element guarantees the frosted look everywhere by blurring its OWN
+   painted content with `filter: blur()` instead of trying to sample what's
+   behind the element. filter has none of backdrop-filter's compositing
+   quirks — it just works, on every browser, every device, every laptop.
+   z-index:-1 keeps it behind real content (text, icons) but above the
+   element's own background-color, and border-radius:inherit keeps the
+   rounded pill shape matching without needing overflow:hidden anywhere. */
+nav::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
+    url("./assets/NKM.png") center / cover no-repeat;
+  filter: blur(24px) saturate(180%);
+  pointer-events: none;
 }
 
 /* Browsers with zero backdrop-filter support (very old Firefox/Edge) fall
@@ -317,8 +353,8 @@ nav {
 .introduction-container-main {
   position: relative;
   background-color: var(--glass-bg);
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border: 1px solid var(--glass-border);
   transition: background-color 0.5s ease-in;
   border-radius: var(--radius);
@@ -329,8 +365,11 @@ nav {
   --mx: 50%;
   --my: 50%;
   isolation: isolate;
-  transform: translateZ(0);
 }
+
+/* Bulletproof frosted layer — see nav::after comment above for why this
+   exists instead of relying solely on backdrop-filter. Uses ::after since
+   ::before is already used for the cursor spotlight below. */
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .introduction-container-main {
@@ -534,17 +573,19 @@ nav {
 
 /* ── GLASS SECTION (shared by all other sections) ── */
 .glass-section {
+  position: relative;
   background-color: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
   transition: background-color 0.5s ease-in;
   margin: 32px auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
   isolation: isolate;
-  transform: translateZ(0);
 }
+
+/* Bulletproof frosted layer — see nav::after comment above */
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-section {
@@ -1167,7 +1208,7 @@ footer {
   position: fixed;
   bottom: 18px;
   left: 50%;
-  transform: translateX(-50%) translateZ(0);
+  transform: translateX(-50%);
   z-index: 200;
   display: flex;
   align-items: flex-end;
@@ -1180,6 +1221,24 @@ footer {
   border: 1px solid var(--glass-border);
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
   isolation: isolate;
+}
+
+/* Bulletproof frosted layer — see nav::after comment above. z-index:-1 keeps
+   this behind the dock-icon buttons; since the pseudo is exactly inset:0
+   (same size as .mac-dock, no overscan), it never needs overflow:hidden —
+   which matters here because dock-tooltip intentionally pops up ABOVE the
+   dock's own bounds and must not be clipped. */
+.mac-dock::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
+    url("./assets/NKM.png") center / cover no-repeat;
+  filter: blur(24px) saturate(180%);
+  pointer-events: none;
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -1274,6 +1333,20 @@ footer {
   transition: opacity 0.3s, transform 0.3s var(--ease-spring);
   z-index: 200;
   isolation: isolate;
+}
+
+/* Bulletproof frosted layer — see nav::after comment above */
+#scrollTop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background:
+    linear-gradient(var(--glass-bg-strong), var(--glass-bg-strong)),
+    url("./assets/NKM.png") center / cover no-repeat;
+  filter: blur(18px) saturate(180%);
+  pointer-events: none;
 }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

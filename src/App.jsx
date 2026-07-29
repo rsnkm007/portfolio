@@ -328,6 +328,10 @@ function App() {
         <div className="scroll-progress-bar" ref={progressRef}></div>
       </div>
 
+      {/* FIXED BACKGROUND — replaces body's background-attachment:fixed,
+    which Chrome can't blur correctly with backdrop-filter */}
+<div className="fixed-bg" aria-hidden="true"></div>
+
       {/* AMBIENT BACKGROUND BLOBS */}
       <div className="ambient-blobs" aria-hidden="true">
         <span className="blob blob-1"></span>

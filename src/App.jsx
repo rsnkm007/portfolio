@@ -7,6 +7,7 @@ import {
   FaDownload
 } from "react-icons/fa";
 import './App.css'
+import emailjs from '@emailjs/browser';
 import bgVideo from './assets/snake.mp4'
 
 function App() {
@@ -18,6 +19,12 @@ function App() {
   const [activeSection, setActiveSection] = useState('home')
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [sending, setSending] = useState(false)
+
+  useEffect(() => {
+    emailjs.init({
+      publicKey: "cthc9fnb-RXexLO8L"
+    });
+  }, []);
 
   /* ── TYPING EFFECT ── */
   useEffect(() => {
@@ -228,31 +235,28 @@ function App() {
     const message = e.target.message.value
     const body = `Name: ${name}\n\nEmail: ${email}\n\nMessage:\n${message}`
 
-    if (window.emailjs) {
-      setSending(true)
-      window.emailjs.init({ publicKey: 'cthc9fnb-RXexLO8L' })
-      window.emailjs
-        .send('service_6ymf1qa', 'template_8wxi3sq', {
-          from_name: name,
-          from_email: email,
-          subject,
-          message,
-        })
-        .then(() => {
-          alert('✅ Message sent successfully!')
-          formRef.current.reset()
-          setSending(false)
-        })
-        .catch((err) => {
-          console.log(err)
-          alert('❌ Failed to send message.')
-          setSending(false)
-        })
-    } else {
-      window.location.href = `mailto:nkm23022003@gmail.com?subject=${encodeURIComponent(
-        subject
-      )}&body=${encodeURIComponent(body)}`
-    }
+    setSending(true);
+
+    emailjs.send(
+      "service_6ymf1qa",
+      "template_8wxi3sq",
+      {
+        from_name: name,
+        from_email: email,
+        subject,
+        message,
+      }
+    )
+      .then(() => {
+        alert("✅ Message sent successfully!");
+        formRef.current.reset();
+        setSending(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        alert("❌ Failed to send message.");
+        setSending(false);
+      });
   }
 
   const navLinks = [
@@ -330,17 +334,17 @@ function App() {
       <div className="fixed-bg" aria-hidden="true"></div>
 
       {/* FIXED BACKGROUND VIDEO */}
-<div className="fixed-bg" aria-hidden="true">
-  <video
-    className="bg-video"
-    autoPlay
-    loop
-    muted
-    playsInline
-  >
-    <source src={bgVideo} type="video/mp4" />
-  </video>
-</div>
+      <div className="fixed-bg" aria-hidden="true">
+        <video
+          className="bg-video"
+          autoPlay
+          loop
+          muted
+          playsInline
+        >
+          <source src={bgVideo} type="video/mp4" />
+        </video>
+      </div>
 
       {/* AMBIENT BACKGROUND BLOBS */}
       <div className="ambient-blobs" aria-hidden="true">

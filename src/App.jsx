@@ -7,7 +7,7 @@ import {
   FaDownload
 } from "react-icons/fa";
 import './App.css'
-import bgVideo from './assets/mantis.mp4'
+import bgVideo from './assets/snake.mp4'
 
 function App() {
   const typedTextRef = useRef(null)

@@ -444,7 +444,7 @@ function App() {
               </a>
 
               <a
-                href="https://drive.google.com/file/d/1x-k5-HpuxQbJWGk5hgB_mrdnId-rP-nN/view?usp=drive_link"
+                href="https://drive.google.com/file/d/1AOKlsA6Bk9CY3hdJ218xmTdPSoJMJ4TK/view?usp=drive_link"
                 target="_blank"
                 rel="noreferrer"
                 className="resume-link"

@@ -535,6 +535,7 @@ function App() {
                 <div className="skill-category-title">Backend</div>
                 <div className="skill-tags">
                   <span className="tag">Node.js</span>
+                  <span className="tag">Spring Boot</span>
                   <span className="tag">MySQL</span>
                   <span className="tag">MongoDB</span>
                   <span className="tag">SQLite</span>
@@ -577,6 +578,15 @@ function App() {
                 <div className="timeline-dot"></div>
                 <div className="timeline-period">July 2026 – Present</div>
                 <div className="timeline-role">MERN Stack Web Developer Intern</div>
+                <button
+                  className="timeline-role-button"
+                  onClick={() =>
+                    window.open("https://bigb-frontend.vercel.app/", "_blank")
+                  }
+                >
+                  View Project
+                  <span className="timeline-role-arrow">↗</span>
+                </button>
                 <div className="timeline-company">Wisdom IT Tech Service · Internship</div>
                 <div className="timeline-desc">
                   Developed scalable MERN stack applications using MongoDB, Express.js, React.js, and Node.js. Built

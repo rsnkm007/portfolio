@@ -759,6 +759,72 @@ nav {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-dark);
+  display: inline-block;
+  margin-right: 10px;
+}
+
+.timeline-role-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 8px;
+  margin-bottom: 8px;
+
+  padding: 7px 14px;
+
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--accent-blue);
+
+  border: 1px solid rgba(0, 113, 227, 0.18);
+  border-radius: 999px;
+
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s var(--ease-spring),
+    box-shadow 0.25s ease;
+}
+
+.timeline-role-button:hover {
+  background: var(--accent-blue);
+  color: #fff;
+  border-color: var(--accent-blue);
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 7px 18px rgba(0, 113, 227, 0.25),
+    0 1px 0 rgba(255, 255, 255, 0.25) inset;
+}
+
+.timeline-role-button:active {
+  transform: translateY(0) scale(0.96);
+}
+
+.timeline-role-arrow {
+  font-size: 0.9rem;
+  line-height: 1;
+
+  transition: transform 0.25s var(--ease-spring);
+}
+
+.timeline-role-button:hover .timeline-role-arrow {
+  transform: translate(2px, -2px);
 }
 
 .timeline-company {

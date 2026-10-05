@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaDownload } from 'react-icons/fa'
+import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaDownload, FaAdjust } from 'react-icons/fa'
 import emailjs from '@emailjs/browser'
 import './App.css'
 
@@ -15,7 +15,7 @@ const skills = {
 }
 
 const jobs = [
-  { logo: 'WI', period: 'July 2026 – Present', role: 'MERN Stack Web Developer Intern', company: 'Wisdom IT Tech Service · Internship', link: 'https://bigb-frontend.vercel.app/', big: 'NOW', unit: 'Ongoing',
+  { logo: 'WI', period: 'July 2026 – Present', role: 'MERN Stack Web Developer Intern', company: 'Wisdom Tech IT Service · Internship', link: 'https://bigb-frontend.vercel.app/', big: 'NOW', unit: 'Ongoing',
     desc: 'Developed scalable MERN stack applications using MongoDB, Express.js, React.js, and Node.js. Built reusable React components and RESTful APIs, collaborated through Git, and improved performance and responsive UI.',
     tags: ['React.js', 'Node.js', 'Express.js', 'MongoDB', 'JavaScript', 'UI/UX Design'] },
   { logo: 'TB', period: 'Mar 2024 – May 2024', role: 'Full Stack Web Developer Intern', company: 'Teckky Bench · Internship', big: 3, unit: 'Months',
@@ -91,6 +91,35 @@ export default function App() {
   const [top, setTop] = useState(false)
   const [sending, setSending] = useState(false)
 
+  // colour swap: blue <-> #fbf9f1
+  const [inverted, setInverted] = useState(() => {
+    try { return localStorage.getItem('invert') === '1' } catch { return false }
+  })
+  const glitchTimers = useRef([])
+  const busy = useRef(false)
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', inverted ? 'flip' : 'normal')
+    try { localStorage.setItem('invert', inverted ? '1' : '0') } catch {}
+  }, [inverted])
+  useEffect(() => () => glitchTimers.current.forEach(clearTimeout), [])
+
+  // glitch animation: page shakes + colours flicker, then settles on the swapped palette
+  const toggleInvert = () => {
+    if (busy.current) return
+    const next = !inverted
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setInverted(next); return }
+    busy.current = true
+    const root = document.documentElement
+    const paint = (inv) => root.setAttribute('data-theme', inv ? 'flip' : 'normal')
+    root.classList.add('glitching')
+    const seq = [next, !next, next, !next, next]
+    const at = [0, 120, 260, 420, 600]
+    const t = glitchTimers.current
+    seq.forEach((v, i) => t.push(setTimeout(() => paint(v), at[i])))
+    t.push(setTimeout(() => setInverted(next), 620))
+    t.push(setTimeout(() => { root.classList.remove('glitching'); busy.current = false }, 1700))
+  }
+
   useEffect(() => { emailjs.init({ publicKey: 'cthc9fnb-RXexLO8L' }) }, [])
 
   useEffect(() => {
@@ -143,6 +172,7 @@ export default function App() {
 
   return (
     <>
+      <div className="glitch-fx" aria-hidden="true" />
       <div className="progress"><div ref={bar} /></div>
 
       <header className="topbar">
@@ -152,7 +182,12 @@ export default function App() {
             <li key={n}><a href={`#${n}`} className={active === n ? 'on' : ''} onClick={(e) => { e.preventDefault(); go(n) }}>{n}</a></li>
           ))}
         </ul>
-        <span className="avail"><i />Available for work</span>
+        <div className="right">
+          <span className="avail"><i />Available for work</span>
+          <button className="theme-btn" onClick={toggleInvert} aria-pressed={inverted} aria-label="Invert colors" title="Invert colors">
+            <FaAdjust />
+          </button>
+        </div>
       </header>
 
       <section id="home" className="hero" ref={hero} onMouseMove={onHeroMove}>

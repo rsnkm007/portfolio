@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaDownload, FaAdjust } from 'react-icons/fa'
+import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaDownload, FaAdjust, FaEye } from 'react-icons/fa'
 import emailjs from '@emailjs/browser'
 import './App.css'
 
@@ -91,33 +91,42 @@ export default function App() {
   const [top, setTop] = useState(false)
   const [sending, setSending] = useState(false)
 
-  // colour swap: blue <-> #fbf9f1
-  const [inverted, setInverted] = useState(() => {
-    try { return localStorage.getItem('invert') === '1' } catch { return false }
+  // themes: 'normal' | 'flip' (colours swapped) | 'contrast' (black & white)
+  const [theme, setTheme] = useState(() => {
+    try {
+      const t = localStorage.getItem('theme')
+      if (['normal', 'flip', 'contrast'].includes(t)) return t
+      return localStorage.getItem('invert') === '1' ? 'flip' : 'normal'
+    } catch { return 'normal' }
   })
+  const lastBase = useRef(theme === 'contrast' ? 'normal' : theme)
   const glitchTimers = useRef([])
   const busy = useRef(false)
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', inverted ? 'flip' : 'normal')
-    try { localStorage.setItem('invert', inverted ? '1' : '0') } catch {}
-  }, [inverted])
+    document.documentElement.setAttribute('data-theme', theme)
+    try { localStorage.setItem('theme', theme) } catch {}
+  }, [theme])
   useEffect(() => () => glitchTimers.current.forEach(clearTimeout), [])
 
-  // glitch animation: page shakes + colours flicker, then settles on the swapped palette
-  const toggleInvert = () => {
-    if (busy.current) return
-    const next = !inverted
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setInverted(next); return }
+  // glitch animation: page shakes + colours flicker, then settles on the new theme
+  const switchTheme = (target) => {
+    if (busy.current || target === theme) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setTheme(target); return }
     busy.current = true
     const root = document.documentElement
-    const paint = (inv) => root.setAttribute('data-theme', inv ? 'flip' : 'normal')
+    const from = theme
     root.classList.add('glitching')
-    const seq = [next, !next, next, !next, next]
+    const seq = [target, from, target, from, target]
     const at = [0, 120, 260, 420, 600]
     const t = glitchTimers.current
-    seq.forEach((v, i) => t.push(setTimeout(() => paint(v), at[i])))
-    t.push(setTimeout(() => setInverted(next), 620))
+    seq.forEach((v, i) => t.push(setTimeout(() => root.setAttribute('data-theme', v), at[i])))
+    t.push(setTimeout(() => setTheme(target), 620))
     t.push(setTimeout(() => { root.classList.remove('glitching'); busy.current = false }, 1700))
+  }
+  const toggleInvert = () => switchTheme(theme === 'normal' ? 'flip' : 'normal')
+  const toggleContrast = () => {
+    if (theme === 'contrast') switchTheme(lastBase.current)
+    else { lastBase.current = theme; switchTheme('contrast') }
   }
 
   useEffect(() => { emailjs.init({ publicKey: 'cthc9fnb-RXexLO8L' }) }, [])
@@ -184,8 +193,11 @@ export default function App() {
         </ul>
         <div className="right">
           <span className="avail"><i />Available for work</span>
-          <button className="theme-btn" onClick={toggleInvert} aria-pressed={inverted} aria-label="Invert colors" title="Invert colors">
+          <button className="theme-btn" data-tip="Jitter Alert" onClick={toggleInvert} aria-pressed={theme === 'flip'} aria-label="Invert colors (Jitter Alert)">
             <FaAdjust />
+          </button>
+          <button className="theme-btn" data-tip="Contrast Theme" onClick={toggleContrast} aria-pressed={theme === 'contrast'} aria-label="Toggle black and white contrast theme">
+            <FaEye />
           </button>
         </div>
       </header>

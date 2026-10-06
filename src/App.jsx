@@ -82,7 +82,80 @@ function Sec({ id, eyebrow, title, children }) {
   )
 }
 
+// ---------- Showcase animations: word splitting, hero scroll progress, word highlight ----------
+// wrap each word of an element in a span (once)
+function split(el, wrap) {
+  if (el.dataset.split) return []
+  el.dataset.split = '1'
+  const text = el.textContent.trim()
+  el.setAttribute('aria-label', text)
+  el.textContent = ''
+  return text.split(/\s+/).map((word, i) => {
+    const outer = document.createElement('span')
+    outer.setAttribute('aria-hidden', 'true')
+    const inner = wrap(outer, i)
+    inner.textContent = word
+    el.append(outer, ' ')
+    return outer
+  })
+}
+
+function useShowcase() {
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+    const root = document.documentElement
+
+    // 1. headings: words rise out of a mask, one after another
+    document.querySelectorAll('h2').forEach((h) =>
+      split(h, (outer, i) => {
+        outer.className = 'w'
+        const inner = document.createElement('i')
+        inner.style.setProperty('--i', i)
+        outer.append(inner)
+        return inner
+      })
+    )
+
+    // 2. About text: words light up as you scroll (Apple-style)
+    const groups = [...document.querySelectorAll('.about p')].map((p) => ({
+      p,
+      words: split(p, (outer) => { outer.className = 'wd'; return outer }),
+    }))
+
+    // 3. tags pop in one after another
+    document.querySelectorAll('.tags').forEach((g) =>
+      g.querySelectorAll('.tag').forEach((t, i) => t.style.setProperty('--t', i))
+    )
+
+    // 4. scroll progress: hero parallax + word highlight
+    const hero = document.getElementById('home')
+    let ticking = false
+    const update = () => {
+      ticking = false
+      const vh = window.innerHeight
+      const hp = hero ? Math.min(Math.max(window.scrollY / (hero.offsetHeight * 0.8), 0), 1) : 0
+      root.style.setProperty('--hp', hp.toFixed(3))
+      groups.forEach(({ p, words }) => {
+        if (!words.length) return
+        const r = p.getBoundingClientRect()
+        const prog = Math.min(Math.max((vh * 0.95 - r.top) / (vh * 0.3), 0), 1)
+        const n = Math.round(prog * words.length)
+        words.forEach((w, i) => w.classList.toggle('lit', i < n))
+      })
+    }
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update) } }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    update()
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [])
+}
+
 export default function App() {
+  useShowcase()
   const typed = useRef(null)
   const hero = useRef(null)
   const bar = useRef(null)
@@ -108,10 +181,55 @@ export default function App() {
   }, [theme])
   useEffect(() => () => glitchTimers.current.forEach(clearTimeout), [])
 
-  // glitch animation: page shakes + colours flicker, then settles on the new theme
-  const switchTheme = (target) => {
+  // wavy ripple between themes: the new theme spreads out from the button with a rippling edge
+  const smoothSwap = (target, origin) => {
+    const root = document.documentElement
+    const apply = () => { root.setAttribute('data-theme', target); setTheme(target) }
+    if (!document.startViewTransition) {
+      root.classList.add('theme-fade')
+      apply()
+      setTimeout(() => root.classList.remove('theme-fade'), 900)
+      return
+    }
+    const W = window.innerWidth, H = window.innerHeight
+    const x = origin?.x ?? W - 60, y = origin?.y ?? 40
+    const R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y))
+    const DUR = 1300
+    const vt = document.startViewTransition(apply)
+    vt.ready.then(() => {
+      const style = document.createElement('style')
+      document.head.append(style)
+      const t0 = performance.now()
+      const frame = (now) => {
+        const p = Math.min((now - t0) / DUR, 1)
+        const ease = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2
+        const base = R * 1.2 * ease
+        const amp = R * 0.045 * Math.sin(Math.PI * p)   // wave height grows then settles
+        const pts = []
+        for (let i = 0; i < 72; i++) {
+          const a = (i / 72) * Math.PI * 2
+          const rr = base + amp * Math.sin(a * 6 + p * 16)
+          pts.push(`${(x + rr * Math.cos(a)).toFixed(1)}px ${(y + rr * Math.sin(a)).toFixed(1)}px`)
+        }
+        style.textContent = `::view-transition-new(root){clip-path:polygon(${pts.join(',')})}`
+        if (p < 1) requestAnimationFrame(frame)
+      }
+      requestAnimationFrame(frame)
+      // old page drifts back slightly so the change feels like a shift
+      root.animate(
+        { transform: ['scale(1)', 'scale(.965)'], filter: ['brightness(1)', 'brightness(.85)'] },
+        { duration: DUR, easing: 'cubic-bezier(.65,0,.25,1)', fill: 'forwards', pseudoElement: '::view-transition-old(root)' }
+      )
+      vt.finished.finally(() => style.remove())
+    }).catch(() => {})
+  }
+
+  // switch theme; the glitch animation only runs when `glitch` is true
+  // (page shakes + colours flicker, then settles on the new theme)
+  const switchTheme = (target, glitch = false, origin) => {
     if (busy.current || target === theme) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { setTheme(target); return }
+    if (!glitch) { smoothSwap(target, origin); return }
     busy.current = true
     const root = document.documentElement
     const from = theme
@@ -123,10 +241,15 @@ export default function App() {
     t.push(setTimeout(() => setTheme(target), 620))
     t.push(setTimeout(() => { root.classList.remove('glitching'); busy.current = false }, 1700))
   }
-  const toggleInvert = () => switchTheme(theme === 'normal' ? 'flip' : 'normal')
+  // normal <-> flip: wavy ripple, no glitch
+  const toggleInvert = (e) => {
+    const b = e?.currentTarget?.getBoundingClientRect?.()
+    switchTheme(theme === 'normal' ? 'flip' : 'normal', false, b && { x: b.left + b.width / 2, y: b.top + b.height / 2 })
+  }
+  // contrast on/off: keeps the glitch
   const toggleContrast = () => {
-    if (theme === 'contrast') switchTheme(lastBase.current)
-    else { lastBase.current = theme; switchTheme('contrast') }
+    if (theme === 'contrast') switchTheme(lastBase.current, true)
+    else { lastBase.current = theme; switchTheme('contrast', true) }
   }
 
   useEffect(() => { emailjs.init({ publicKey: 'cthc9fnb-RXexLO8L' }) }, [])
@@ -193,7 +316,7 @@ export default function App() {
         </ul>
         <div className="right">
           <span className="avail"><i />Available for work</span>
-          <button className="theme-btn" data-tip="Jitter Alert" onClick={toggleInvert} aria-pressed={theme === 'flip'} aria-label="Invert colors (Jitter Alert)">
+          <button className="theme-btn" onClick={toggleInvert} aria-pressed={theme === 'flip'} aria-label="Invert colors">
             <FaAdjust />
           </button>
           <button className="theme-btn" data-tip="Contrast Theme" onClick={toggleContrast} aria-pressed={theme === 'contrast'} aria-label="Toggle black and white contrast theme">
@@ -237,7 +360,7 @@ export default function App() {
       <Sec id="about" eyebrow="About Me" title="Passionate about modern software development.">
         <div className="panel about reveal">
           <div>
-            <p>I'm a Full Stack Web Developer and MCA student with practical experience in designing and developing responsive web applications. I enjoy solving real-world problems using React, Node.js, JavaScript, and MySQL while continuously strengthening my software engineering skills.</p>
+            <p>I'm a Full Stack Web Developer and MCA Graduate with practical experience in designing and developing responsive web applications. I enjoy solving real-world problems using React, Node.js, JavaScript, and MySQL while continuously strengthening my software engineering skills.</p>
             <p>I have worked on healthcare, e-commerce, and blood management systems and enjoy creating applications that are efficient, scalable, and easy to use.</p>
           </div>
           <div className="stats">
@@ -291,7 +414,7 @@ export default function App() {
       </Sec>
 
       <Sec id="education" eyebrow="Education" title="Academic background.">
-        <div className="grid stagger">
+        <div className="grid stagger edu-grid">
           {edu.map(([y, d, s, g]) => (
             <div className="panel card" key={d} {...fx}>
               <p className="kicker">{y}</p><h4>{d}</h4><p>{s}</p><span className="grade">{g}</span>

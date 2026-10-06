@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaDownload, FaAdjust, FaEye } from 'react-icons/fa'
 import emailjs from '@emailjs/browser'
 import './App.css'
@@ -127,12 +127,53 @@ function useShowcase() {
       g.querySelectorAll('.tag').forEach((t, i) => t.style.setProperty('--t', i))
     )
 
-    // 4. scroll progress: hero parallax + word highlight
+    // 4. scroll progress: hero parallax + word highlight + education zoom-settle
     const hero = document.getElementById('home')
+    const eduIntro = document.querySelector('.edu-intro')
+    const eduTitle = document.querySelector('.edu-title')
     let ticking = false
+
+    // The zoom/torch effect only runs on large screens. Phones and small tablets show the title normally
+    // (scaling it up there made the page wider than the screen, so the browser zoomed the whole page out).
+    const mq = window.matchMedia('(min-width: 901px)')
+    // measured once (and on resize) instead of on every scroll frame, to avoid layout thrashing
+    let tw = 0, stageLeft = 0, stageH = 0, introH = 0, lastP = -1
+    const measure = () => {
+      if (!eduIntro || !eduTitle) return
+      const stage = eduIntro.firstElementChild
+      tw = eduTitle.offsetWidth
+      stageH = stage.offsetHeight
+      introH = eduIntro.offsetHeight
+      stageLeft = stage.getBoundingClientRect().left
+      lastP = -1
+    }
+    measure()
+    document.fonts?.ready.then(() => { measure(); onScroll() })
+
     const update = () => {
       ticking = false
       const vh = window.innerHeight
+
+      // education intro: title starts zoomed to full screen, settles to normal size,
+      // while a torch of light sweeps left and right across it
+      if (eduIntro && eduTitle && mq.matches && tw) {
+        const stage = eduIntro.firstElementChild
+        const range = Math.max(introH - stageH, 1)
+        const raw = Math.min(Math.max((vh * 0.18 - eduIntro.getBoundingClientRect().top) / range, 0), 1)
+        const p = Math.min(Math.max((raw - 0.08) / 0.82, 0), 1)   // short hold, then settle
+        if (p !== lastP) {                                         // nothing changed -> no style work
+          lastP = p
+          const e = p * p * (3 - 2 * p)                            // smooth ease
+          const ez = 1 - e                                         // 1 = zoomed, 0 = settled
+          const sMax = Math.min((document.documentElement.clientWidth * 0.92) / tw, 3.4)
+          const ex = document.documentElement.clientWidth / 2 - (sMax * tw) / 2 - stageLeft
+          stage.style.setProperty('--ez', ez.toFixed(3))
+          stage.style.setProperty('--es', (1 + (sMax - 1) * ez).toFixed(3))
+          stage.style.setProperty('--ex', `${(ex * ez).toFixed(1)}px`)
+          stage.style.setProperty('--tx', `${(50 + 60 * Math.sin(p * Math.PI * 3)).toFixed(1)}%`)  // torch position
+        }
+      }
+
       const hp = hero ? Math.min(Math.max(window.scrollY / (hero.offsetHeight * 0.8), 0), 1) : 0
       root.style.setProperty('--hp', hp.toFixed(3))
       groups.forEach(({ p, words }) => {
@@ -144,18 +185,129 @@ function useShowcase() {
       })
     }
     const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update) } }
+    let lastW = window.innerWidth
+    const onResize = () => {
+      // phones fire "resize" whenever the URL bar shows/hides while scrolling; only re-measure on a real width change
+      if (window.innerWidth === lastW) return
+      lastW = window.innerWidth
+      measure()
+      onScroll()
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
+    window.addEventListener('resize', onResize)
     update()
     return () => {
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('resize', onResize)
     }
   }, [])
 }
 
+// ---------- Remember scroll position across refreshes ----------
+const SCROLL_KEY = 'portfolio-scroll-y'
+const getSavedScroll = () => {
+  try { return Number(sessionStorage.getItem(SCROLL_KEY)) || 0 } catch { return 0 }
+}
+// we restore the position ourselves (the browser's own restore fires too late and conflicts with the intro)
+if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+  window.history.scrollRestoration = 'manual'
+}
+
+function useScrollMemory() {
+  // restore (runs before paint, so there's no flash from the top)
+  useLayoutEffect(() => {
+    const saved = getSavedScroll()
+    if (saved <= 40) return
+    let userMoved = false
+    const stop = () => { userMoved = true }
+    const evts = ['wheel', 'touchstart', 'keydown', 'mousedown']
+    evts.forEach((ev) => window.addEventListener(ev, stop, { passive: true, once: true }))
+    const restore = () => { if (!userMoved) window.scrollTo({ top: saved, behavior: 'instant' }) }
+    restore()
+    // page height can change once fonts/images load, so re-apply (unless the user already scrolled)
+    window.addEventListener('load', restore, { once: true })
+    document.fonts?.ready.then(restore)
+    const t = setTimeout(restore, 400)
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener('load', restore)
+      evts.forEach((ev) => window.removeEventListener(ev, stop))
+    }
+  }, [])
+
+  // save
+  useEffect(() => {
+    let ticking = false
+    const save = () => {
+      ticking = false
+      try { sessionStorage.setItem(SCROLL_KEY, String(Math.round(window.scrollY))) } catch {}
+    }
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(save) } }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('pagehide', save)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('pagehide', save)
+    }
+  }, [])
+}
+
+// ---------- Intro: the dot of the "i" in "Hi" starts as a full-screen circle, zooms out to its real size and
+// settles in its place. Then the whole page loads in while the dot bounces up and settles back. ----------
+function useIntro() {
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    // skip the intro if the user was scrolled down before refreshing (their position is restored instead)
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || getSavedScroll() > 40) return
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    root.classList.add('intro')
+    let off = false, started = false, landed = false
+    const timers = []
+    const later = (fn, ms) => timers.push(setTimeout(fn, ms))
+    const finish = () => { timers.forEach(clearTimeout); root.classList.remove('intro', 'go', 'land', 'done') }
+    const land = () => {            // dot has settled: load the whole page AND bounce the dot, together
+      if (landed || off) return
+      landed = true
+      root.classList.add('land')
+      later(done, 1700)             // safety net if the bounce's animationend never fires
+      later(finish, 2600)           // let the content animations play out, then clean up
+    }
+    const done = () => root.classList.add('done')   // bounce finished: hand over to the real dot
+    const begin = () => {
+      if (off || started) return
+      started = true
+      const dot = document.querySelector('.i-dot')
+      const ov = document.querySelector('.intro-dot')
+      if (!dot || !ov) { finish(); return }
+      const r = dot.getBoundingClientRect()
+      const d = r.width
+      const vw = root.clientWidth, vh = window.innerHeight
+      const fcx = r.left + d / 2, fcy = r.top - 24 + d / 2                 // h1 still sits 24px low while fading in
+      const W = 2 * Math.hypot(Math.max(fcx, vw - fcx), Math.max(fcy, vh - fcy)) + 40   // big enough to flood the screen
+      const sf = d / W                                                     // the dot's real size
+      const set = (k, v) => ov.style.setProperty(k, v)
+      set('--W', `${W}px`)
+      set('--tx', `${fcx - W / 2}px`); set('--ty', `${fcy - W / 2}px`)    // centred exactly on the "i" dot
+      set('--sf', sf.toFixed(6))
+      set('--bh', `${Math.max(56, d * 5).toFixed(0)}px`)               // bounce height
+      set('--s1', Math.pow(sf, 0.25).toFixed(6)); set('--s2', Math.pow(sf, 0.5).toFixed(6)); set('--s3', Math.pow(sf, 0.75).toFixed(6))
+      void ov.offsetWidth
+      root.classList.add('go')
+      ov.addEventListener('animationend', (e) => { if (e.animationName === 'dot-s') land(); else if (e.animationName === 'dot-b') done() })
+      later(land, 2400)             // safety net if animationend never fires
+    }
+    const run = () => (document.fonts?.load ? document.fonts.load('800 1em "Plus Jakarta Sans"', 'Hı').catch(() => {}) : Promise.resolve()).then(() => requestAnimationFrame(begin))
+    if (document.readyState === 'complete') run()
+    else window.addEventListener('load', run, { once: true })
+    later(begin, 3000)
+    return () => { off = true; finish() }
+  }, [])
+}
+
 export default function App() {
+  useScrollMemory()
   useShowcase()
+  useIntro()
   const typed = useRef(null)
   const hero = useRef(null)
   const bar = useRef(null)
@@ -304,6 +456,7 @@ export default function App() {
 
   return (
     <>
+      <div className="intro-dot" aria-hidden="true" />
       <div className="glitch-fx" aria-hidden="true" />
       <div className="progress"><div ref={bar} /></div>
 
@@ -330,7 +483,7 @@ export default function App() {
         <div className="wrap hero-grid">
           <div>
             <p className="status fade d1"><i />Open to opportunities</p>
-            <h1 className="fade d2">Hi, I'm <span>Nanda Kumar.</span></h1>
+            <h1 className="fade d2" aria-label="Hi, I'm Nanda Kumar.">H<i className="ii">ı<b className="i-dot" /></i>, I'm <span>Nanda Kumar.</span></h1>
             <p className="role fade d3"><span ref={typed} /><b className="caret" /></p>
             <p className="lead fade d4">I build clean, performant digital products — turning ideas into reality with code, thoughtful design, and a bit of caffeine.</p>
             <div className="cta fade d5">
@@ -413,15 +566,26 @@ export default function App() {
         </div>
       </Sec>
 
-      <Sec id="education" eyebrow="Education" title="Academic background.">
-        <div className="grid stagger edu-grid">
-          {edu.map(([y, d, s, g]) => (
-            <div className="panel card" key={d} {...fx}>
-              <p className="kicker">{y}</p><h4>{d}</h4><p>{s}</p><span className="grade">{g}</span>
+      <section id="education">
+        <div className="wrap">
+          <div className="edu-intro">
+            <div className="edu-stage">
+              <p className="eyebrow visible">Education</p>
+              <div className="edu-title">
+                <h2 data-split="1">Academic background.</h2>
+                <span className="edu-lit" aria-hidden="true">Academic background.</span>
+              </div>
             </div>
-          ))}
+          </div>
+          <div className="grid stagger edu-grid">
+            {edu.map(([y, d, s, g]) => (
+              <div className="panel card" key={d} {...fx}>
+                <p className="kicker">{y}</p><h4>{d}</h4><p>{s}</p><span className="grade">{g}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      </Sec>
+      </section>
 
       <Sec id="certifications" eyebrow="Certifications" title="Credentials & training.">
         <div className="grid stagger">

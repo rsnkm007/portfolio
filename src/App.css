@@ -459,3 +459,91 @@ h2.visible .w > i { transform: none; }
   .edu-grid .card { padding-right: 28px; }
   .edu-grid .grade { position: static; transform: none; }
 }
+
+/* 12. Education intro: title zoomed to full screen, settles to normal size, torch light sweeps across it */
+.edu-intro { height: 200vh; margin-bottom: -20vh; }
+.edu-stage { position: sticky; top: 18vh; height: 64vh; display: flex; flex-direction: column; justify-content: center; }
+.edu-stage .eyebrow { opacity: calc(1 - var(--ez, 0)); }
+.edu-title {
+  position: relative; isolation: isolate; width: max-content; max-width: 100%;
+  transform-origin: left center;
+  scale: var(--es, 1);
+  translate: var(--ex, 0px) 0;
+}
+.edu-title h2, .edu-lit {
+  font: 800 clamp(2rem, 4.6vw, 3.4rem)/1.08 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -.035em; margin: 0; max-width: none; white-space: nowrap;
+}
+/* base text: dim while zoomed, full colour once settled */
+.edu-title h2 { opacity: calc(1 - var(--ez, 0) * .85); }
+/* torch: bright copy of the text, only visible inside a moving circle of light */
+.edu-lit {
+  position: absolute; inset: 0; pointer-events: none; color: transparent;
+  background: radial-gradient(ellipse 26% 170% at var(--tx, 50%) 50%, var(--ink) 0, var(--ink) 40%, transparent 100%);
+  -webkit-background-clip: text; background-clip: text;
+  opacity: var(--ez, 0);
+}
+/* soft glow of the torch behind the text */
+.edu-title::before {
+  content: ''; position: absolute; z-index: -1; left: -10%; right: -10%; top: -70%; bottom: -70%;
+  background: radial-gradient(ellipse 22% 45% at var(--tx, 50%) 50%, color-mix(in srgb, var(--sky) 60%, transparent), transparent 70%);
+  filter: blur(24px); opacity: calc(var(--ez, 0) * .9); pointer-events: none;
+}
+@media (max-width: 900px) {
+  .edu-title { width: auto; }
+  .edu-title h2, .edu-lit { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edu-intro { height: auto; margin-bottom: 0; }
+  .edu-stage { position: static; height: auto; }
+}
+
+
+/* 13. Intro: the dot of the "i" starts as a full-screen circle and zooms out to its real size right where it
+       belongs. Then the page content loads while the dot bounces up and settles back into place.
+       Geometry measured from Plus Jakarta Sans 800. */
+.ii { position: relative; display: inline-block; font-style: normal; padding: 0 .011em; }
+.i-dot { position: absolute; left: .055em; top: .183em; width: .15em; height: .15em; border-radius: 50%; background: currentColor; }
+.intro-dot { display: none; }
+
+html.intro:not(.land) { overflow: hidden; scrollbar-gutter: stable; }
+html.intro:not(.done) .i-dot { visibility: hidden; }   /* the real dot shows once the bouncing one has settled */
+
+/* part 1 (1.7s): zoom out from full screen to the real size, centred on the "i" dot */
+html.intro .intro-dot {
+  display: block; position: fixed; left: 0; top: 0; z-index: 350; pointer-events: none;
+  width: var(--W, 10px); height: var(--W, 10px); border-radius: 50%; background: var(--ink);
+  translate: var(--tx, 0px) var(--ty, 0px); scale: 1;
+  animation: dot-s .7s forwards;
+  animation-play-state: paused; visibility: hidden;
+}
+html.intro.go .intro-dot { visibility: visible; animation-play-state: running; }
+/* part 2 (1.2s): same moment the page content loads, the dot bounces up and settles back */
+html.intro.land .intro-dot { scale: var(--sf); animation: dot-b 1.2s forwards; }
+html.intro.done .intro-dot { display: none; }
+
+/* even (geometric) zoom steps so it feels like a steady zoom */
+@keyframes dot-s {
+  0%   { scale: 1;          animation-timing-function: linear; }
+  25%  { scale: var(--s1);  animation-timing-function: linear; }
+  50%  { scale: var(--s2);  animation-timing-function: linear; }
+  75%  { scale: var(--s3);  animation-timing-function: cubic-bezier(.25, .7, .35, 1); }
+  100% { scale: var(--sf); }
+}
+/* bounce: rises (slows down), falls (speeds up), smaller bounces each time */
+@keyframes dot-b {
+  0%   { translate: var(--tx) var(--ty);                              animation-timing-function: cubic-bezier(.33, 1, .68, 1); }
+  32%  { translate: var(--tx) calc(var(--ty) - var(--bh));            animation-timing-function: cubic-bezier(.32, 0, .67, 0); }
+  58%  { translate: var(--tx) var(--ty);                              animation-timing-function: cubic-bezier(.33, 1, .68, 1); }
+  74%  { translate: var(--tx) calc(var(--ty) - var(--bh) * .32);      animation-timing-function: cubic-bezier(.32, 0, .67, 0); }
+  88%  { translate: var(--tx) var(--ty);                              animation-timing-function: cubic-bezier(.33, 1, .68, 1); }
+  94%  { translate: var(--tx) calc(var(--ty) - var(--bh) * .1);       animation-timing-function: cubic-bezier(.32, 0, .67, 0); }
+  100% { translate: var(--tx) var(--ty); }
+}
+
+/* page content waits until the dot has landed, then loads in */
+html.intro:not(.land) .fade { animation-play-state: paused; }
+html.intro .topbar { animation: intro-in 1s var(--ease) .15s backwards; }
+html.intro .marquee { animation: intro-in 1s var(--ease) .7s backwards; }
+html.intro:not(.land) .topbar, html.intro:not(.land) .marquee { animation-play-state: paused; }
+@keyframes intro-in { from { opacity: 0; translate: 0 -14px; } }

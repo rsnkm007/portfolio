@@ -44,19 +44,24 @@ function Counter({ to, suffix = '', pad = 0 }) {
   const [n, setN] = useState(0)
   const ref = useRef(null)
   useEffect(() => {
-    const o = new IntersectionObserver(([e]) => {
-      if (!e.isIntersecting) return
-      o.disconnect()
+    let raf = 0, shown = false
+    const run = () => {
+      cancelAnimationFrame(raf)
       const start = performance.now(), dur = 1600
       const step = (t) => {
         const p = Math.min((t - start) / dur, 1)
         setN(Math.round(to * (1 - Math.pow(1 - p, 3))))
-        if (p < 1) requestAnimationFrame(step)
+        if (p < 1) raf = requestAnimationFrame(step)
       }
-      requestAnimationFrame(step)
-    }, { threshold: 0.4 })
+      raf = requestAnimationFrame(step)
+    }
+    // counts up when it enters the screen, resets once it has fully left, so it plays again next time
+    const o = new IntersectionObserver(([e]) => {
+      if (e.intersectionRatio >= 0.4 && !shown) { shown = true; run() }
+      else if (e.intersectionRatio === 0 && shown) { shown = false; cancelAnimationFrame(raf); setN(0) }
+    }, { threshold: [0, 0.4] })
     o.observe(ref.current)
-    return () => o.disconnect()
+    return () => { cancelAnimationFrame(raf); o.disconnect() }
   }, [to])
   return <span ref={ref}>{String(n).padStart(pad, '0')}{suffix}</span>
 }
@@ -422,14 +427,20 @@ export default function App() {
 
   useEffect(() => {
     const laptop = window.matchMedia('(min-width: 1025px) and (hover: hover) and (pointer: fine)')
+    // Reveal animations replay every time: the "visible" class is added when an element scrolls into view
+    // and removed once it has completely left the screen, so scrolling back plays the transition again.
     const rev = new IntersectionObserver((es) => es.forEach((e) => {
-      if (!e.isIntersecting) return
-      e.target.classList.add('visible')
-      // phones/tablets: the Academic tiles appear together with the title (laptops keep their own scroll effect)
-      if (e.target.matches('.edu-eyebrow, .edu-h2') && !laptop.matches) {
-        document.querySelector('.edu-grid')?.classList.add('visible')
+      const t = e.target
+      if (e.intersectionRatio >= 0.12) {
+        t.classList.add('visible')
+        // phones/tablets: the Academic tiles appear together with the title (laptops keep their own scroll effect)
+        if (t.matches('.edu-eyebrow, .edu-h2') && !laptop.matches) {
+          document.querySelector('.edu-grid')?.classList.add('visible')
+        }
+      } else if (e.intersectionRatio === 0) {
+        t.classList.remove('visible')
       }
-    }), { threshold: 0.12 })
+    }), { threshold: [0, 0.12] })
     document.querySelectorAll('.reveal, .stagger, .edu-eyebrow, .edu-h2').forEach((el) => rev.observe(el))
     const nv = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && setActive(e.target.id)), { threshold: 0.35 })
     document.querySelectorAll('section[id]').forEach((s) => nv.observe(s))

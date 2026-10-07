@@ -460,42 +460,58 @@ h2.visible .w > i { transform: none; }
   .edu-grid .grade { position: static; transform: none; }
 }
 
-/* 12. Education intro: title zoomed to full screen, settles to normal size, torch light sweeps across it */
-.edu-intro { height: 200vh; margin-bottom: -20vh; }
-.edu-stage { position: sticky; top: 18vh; height: 64vh; display: flex; flex-direction: column; justify-content: center; }
-.edu-stage .eyebrow { opacity: calc(1 - var(--ez, 0)); }
-.edu-title {
-  position: relative; isolation: isolate; width: max-content; max-width: 100%;
-  transform-origin: left center;
-  scale: var(--es, 1);
-  translate: var(--ex, 0px) 0;
+/* 12. Education intro
+   LAPTOP / DESKTOP (wide screen + mouse): title zoomed to full screen, settles to normal size, torch light sweeps across it.
+   PHONES / TABLETS: same reveal as the other sections, and the tiles appear together with the title. */
+html, body { overflow-x: clip; }   /* nothing can ever make the page wider than the screen (stops mobile zoom-out) */
+#education { overflow-x: clip; }
+
+@media (min-width: 1025px) and (hover: hover) and (pointer: fine) {
+  .edu-intro { height: 200vh; margin-bottom: -20vh; }
+  .edu-stage { position: sticky; top: 18vh; height: 64vh; display: flex; flex-direction: column; justify-content: center; }
+  .edu-stage .edu-eyebrow { opacity: calc(1 - var(--ez, 0)); }
+  .edu-eyebrow::after { width: 64px; }
+  .edu-title {
+    position: relative; isolation: isolate; width: max-content; max-width: 100%;
+    transform-origin: left center;
+    scale: var(--es, 1);
+    translate: var(--ex, 0px) 0;
+  }
+  .edu-title h2, .edu-lit {
+    font: 800 clamp(2rem, 4.6vw, 3.4rem)/1.08 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -.035em; margin: 0; max-width: none; white-space: nowrap;
+  }
+  /* base text: dim while zoomed, full colour once settled */
+  .edu-title h2 { opacity: calc(1 - var(--ez, 0) * .85); }
+  /* torch: bright copy of the text, only visible inside a moving circle of light */
+  .edu-lit {
+    position: absolute; inset: 0; pointer-events: none; color: transparent;
+    background: radial-gradient(ellipse 26% 170% at var(--tx, 50%) 50%, var(--ink) 0, var(--ink) 40%, transparent 100%);
+    -webkit-background-clip: text; background-clip: text;
+    opacity: var(--ez, 0);
+  }
+  /* soft glow of the torch behind the text */
+  .edu-title::before {
+    content: ''; position: absolute; z-index: -1; left: -10%; right: -10%; top: -70%; bottom: -70%;
+    background: radial-gradient(ellipse 22% 45% at var(--tx, 50%) 50%, color-mix(in srgb, var(--sky) 60%, transparent), transparent 70%);
+    filter: blur(24px); opacity: calc(var(--ez, 0) * .9); pointer-events: none;
+  }
 }
-.edu-title h2, .edu-lit {
-  font: 800 clamp(2rem, 4.6vw, 3.4rem)/1.08 'Plus Jakarta Sans', sans-serif;
-  letter-spacing: -.035em; margin: 0; max-width: none; white-space: nowrap;
+
+/* phones + tablets: normal flow (no tall pinned area, no zoom), eyebrow fades in like the others */
+@media not all and (min-width: 1025px) and (hover: hover) and (pointer: fine) {
+  .edu-lit { display: none; }
+  .edu-eyebrow {
+    opacity: 0; transform: translateY(40px); filter: blur(8px);
+    transition: opacity 1s var(--ease), transform 1s var(--ease), filter 1s var(--ease);
+  }
+  .edu-eyebrow.visible { opacity: 1; transform: none; filter: none; }
 }
-/* base text: dim while zoomed, full colour once settled */
-.edu-title h2 { opacity: calc(1 - var(--ez, 0) * .85); }
-/* torch: bright copy of the text, only visible inside a moving circle of light */
-.edu-lit {
-  position: absolute; inset: 0; pointer-events: none; color: transparent;
-  background: radial-gradient(ellipse 26% 170% at var(--tx, 50%) 50%, var(--ink) 0, var(--ink) 40%, transparent 100%);
-  -webkit-background-clip: text; background-clip: text;
-  opacity: var(--ez, 0);
-}
-/* soft glow of the torch behind the text */
-.edu-title::before {
-  content: ''; position: absolute; z-index: -1; left: -10%; right: -10%; top: -70%; bottom: -70%;
-  background: radial-gradient(ellipse 22% 45% at var(--tx, 50%) 50%, color-mix(in srgb, var(--sky) 60%, transparent), transparent 70%);
-  filter: blur(24px); opacity: calc(var(--ez, 0) * .9); pointer-events: none;
-}
-@media (max-width: 900px) {
-  .edu-title { width: auto; }
-  .edu-title h2, .edu-lit { white-space: normal; }
-}
+
 @media (prefers-reduced-motion: reduce) {
   .edu-intro { height: auto; margin-bottom: 0; }
   .edu-stage { position: static; height: auto; }
+  .edu-eyebrow { opacity: 1 !important; transform: none !important; filter: none !important; }
 }
 
 

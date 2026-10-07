@@ -104,9 +104,11 @@ function useShowcase() {
   useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
     const root = document.documentElement
+    const mq = window.matchMedia('(min-width: 1025px) and (hover: hover) and (pointer: fine)')
 
     // 1. headings: words rise out of a mask, one after another
-    document.querySelectorAll('h2').forEach((h) =>
+    document.querySelectorAll('h2').forEach((h) => {
+      if (h.classList.contains('edu-h2') && mq.matches) return
       split(h, (outer, i) => {
         outer.className = 'w'
         const inner = document.createElement('i')
@@ -114,7 +116,7 @@ function useShowcase() {
         outer.append(inner)
         return inner
       })
-    )
+    })
 
     // 2. About text: words light up as you scroll (Apple-style)
     const groups = [...document.querySelectorAll('.about p')].map((p) => ({
@@ -133,9 +135,8 @@ function useShowcase() {
     const eduTitle = document.querySelector('.edu-title')
     let ticking = false
 
-    // The zoom/torch effect only runs on large screens. Phones and small tablets show the title normally
-    // (scaling it up there made the page wider than the screen, so the browser zoomed the whole page out).
-    const mq = window.matchMedia('(min-width: 901px)')
+    // The zoom/torch effect only runs on laptops/desktops (wide screen + mouse). Phones and tablets use the same
+    // reveal as the other sections (scaling the title up there made the browser zoom the whole page out).
     // measured once (and on resize) instead of on every scroll frame, to avoid layout thrashing
     let tw = 0, stageLeft = 0, stageH = 0, introH = 0, lastP = -1
     const measure = () => {
@@ -420,8 +421,16 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const rev = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.classList.add('visible')), { threshold: 0.12 })
-    document.querySelectorAll('.reveal, .stagger').forEach((el) => rev.observe(el))
+    const laptop = window.matchMedia('(min-width: 1025px) and (hover: hover) and (pointer: fine)')
+    const rev = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return
+      e.target.classList.add('visible')
+      // phones/tablets: the Academic tiles appear together with the title (laptops keep their own scroll effect)
+      if (e.target.matches('.edu-eyebrow, .edu-h2') && !laptop.matches) {
+        document.querySelector('.edu-grid')?.classList.add('visible')
+      }
+    }), { threshold: 0.12 })
+    document.querySelectorAll('.reveal, .stagger, .edu-eyebrow, .edu-h2').forEach((el) => rev.observe(el))
     const nv = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && setActive(e.target.id)), { threshold: 0.35 })
     document.querySelectorAll('section[id]').forEach((s) => nv.observe(s))
     const onScroll = () => {
@@ -570,9 +579,9 @@ export default function App() {
         <div className="wrap">
           <div className="edu-intro">
             <div className="edu-stage">
-              <p className="eyebrow visible">Education</p>
+              <p className="eyebrow edu-eyebrow">Education</p>
               <div className="edu-title">
-                <h2 data-split="1">Academic background.</h2>
+                <h2 className="edu-h2">Academic background.</h2>
                 <span className="edu-lit" aria-hidden="true">Academic background.</span>
               </div>
             </div>

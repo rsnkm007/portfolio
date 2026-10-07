@@ -352,7 +352,7 @@ export default function App() {
     const W = window.innerWidth, H = window.innerHeight
     const x = origin?.x ?? W - 60, y = origin?.y ?? 40
     const R = Math.hypot(Math.max(x, W - x), Math.max(y, H - y))
-    const DUR = 1300
+    const DUR = 3200
     const vt = document.startViewTransition(apply)
     vt.ready.then(() => {
       const style = document.createElement('style')

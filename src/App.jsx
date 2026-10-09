@@ -52,6 +52,18 @@ const edu = [
 const certs = [['🎓', 'Software Engineering', 'Infosys Springboard', '2025'], ['☕', 'Java Badge', 'Oracle', '2026']]
 const stats = [['Years Exp.', 0, ''], ['Projects', 5, '+'], ['Freelancing', 2, '+'], ['Technologies', 12, '+'], ['Certifications', 2, '']]
 
+const NAME = 'Nanda Kumar.'
+
+// Every letter of the name is a plain inline element holding the REAL letter (no overlay, no copy).
+// During the intro, when the "i" dot starts bouncing, ALL letters start filling with colour at the same moment,
+// inside the real letters, and each letter fills from a different starting point
+// (v0..v5: left, right, bottom, top, centre, top-left corner).
+function NameLetters() {
+  return NAME.split('').map((c, i) =>
+    c === ' ' ? ' ' : <em className={`lt v${i % 6}`} key={i}>{c}</em>
+  )
+}
+
 function Counter({ to, suffix = '', pad = 0 }) {
   const [n, setN] = useState(0)
   const ref = useRef(null)
@@ -271,7 +283,8 @@ function useScrollMemory() {
 }
 
 // ---------- Intro: the dot of the "i" in "Hi" starts as a full-screen circle, zooms out to its real size and
-// settles in its place. Then the whole page loads in while the dot bounces up and settles back. ----------
+// settles in its place. Then the whole page loads in while the dot bounces up and settles back.
+// At that same moment ("land") every letter of the name starts filling with colour (see .lt in App.css). ----------
 function useIntro() {
   useLayoutEffect(() => {
     const root = document.documentElement
@@ -283,12 +296,12 @@ function useIntro() {
     const timers = []
     const later = (fn, ms) => timers.push(setTimeout(fn, ms))
     const finish = () => { timers.forEach(clearTimeout); root.classList.remove('intro', 'go', 'land', 'done') }
-    const land = () => {            // dot has settled: load the whole page AND bounce the dot, together
+    const land = () => {            // dot has settled: load the whole page, bounce the dot AND fill the name, together
       if (landed || off) return
       landed = true
       root.classList.add('land')
       later(done, 1700)             // safety net if the bounce's animationend never fires
-      later(finish, 2600)           // let the content animations play out, then clean up
+      later(finish, 2800)           // let the content + name-fill animations play out, then clean up
     }
     const done = () => root.classList.add('done')   // bounce finished: hand over to the real dot
     const begin = () => {
@@ -515,7 +528,7 @@ export default function App() {
         <div className="wrap hero-grid">
           <div>
             <p className="status fade d1"><i />Open to opportunities</p>
-            <h1 className="fade d2" aria-label="Hi, I'm Nanda Kumar.">H<i className="ii">ı<b className="i-dot" /></i>, I'm <span>Nanda Kumar.</span></h1>
+            <h1 className="fade d2" aria-label="Hi, I'm Nanda Kumar.">H<i className="ii">ı<b className="i-dot" /></i>, I'm <span><NameLetters /></span></h1>
             <p className="role fade d3"><span ref={typed} /><b className="caret" /></p>
             <p className="lead fade d4">I build clean, performant digital products — turning ideas into reality with code, thoughtful design, and a bit of caffeine.</p>
             <div className="cta fade d5">

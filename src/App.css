@@ -568,3 +568,42 @@ html.intro:not(.land) .topbar, html.intro:not(.land) .marquee { animation-play-s
 /* Experience: certificate buttons (wrap neatly on every screen size) */
 .btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .btn-row .btn.light { margin-top: 0; }
+
+/* 14. Intro: the name fills with colour, INSIDE the real letters.
+       No extra copy of the text. While the intro runs, the name's normal gradient is switched off and each
+       letter (.lt) paints its own solid colour fill, clipped to the shape of that letter. The fill starts at
+       size 0 and grows. The moment the "i" dot starts bouncing (html.land), ALL letters start filling together,
+       but each one grows from a different starting point (v0..v5):
+       left, right, bottom, top, centre, top-left corner. */
+       .lt { font-style: normal; }
+
+       /* turn off the name's normal gradient while the intro runs (it comes back automatically when the intro ends) */
+       html.intro h1 span {
+         background: none;
+         animation: none;
+       }
+       
+       html.intro .lt {
+         color: transparent;
+         background-image: linear-gradient(var(--accent), var(--accent));
+         background-repeat: no-repeat;
+         -webkit-background-clip: text;
+         background-clip: text;
+         background-size: 0% 0%;               /* nothing filled yet */
+       }
+       
+       /* starting point of each letter's fill */
+       html.intro .lt.v0 { background-position: 0% 50%;   background-size: 0% 101%; }    /* from the left   */
+       html.intro .lt.v1 { background-position: 100% 50%; background-size: 0% 101%; }    /* from the right  */
+       html.intro .lt.v2 { background-position: 50% 100%; background-size: 101% 0%; }    /* from the bottom */
+       html.intro .lt.v3 { background-position: 50% 0%;   background-size: 101% 0%; }    /* from the top    */
+       html.intro .lt.v4 { background-position: 50% 50%;  background-size: 0% 0%; }      /* from the centre */
+       html.intro .lt.v5 { background-position: 0% 0%;    background-size: 0% 0%; }      /* from top-left   */
+       
+       /* same moment as the dot bounce: every letter starts filling together */
+       html.intro.land .lt {
+         animation: fill-letter 1.6s cubic-bezier(.55, .1, .25, 1) forwards;
+       }
+       @keyframes fill-letter {
+         to { background-size: 101% 101%; }
+       }

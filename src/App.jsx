@@ -18,9 +18,21 @@ const jobs = [
   { logo: 'WI', period: 'July 2026 – Present', role: 'MERN Stack Web Developer Intern', company: 'Wisdom Tech IT Service · Internship', link: 'https://bigb-frontend.vercel.app/', big: 'NOW', unit: 'Ongoing',
     desc: 'Developed scalable MERN stack applications using MongoDB, Express.js, React.js, and Node.js. Built reusable React components and RESTful APIs, collaborated through Git, and improved performance and responsive UI.',
     tags: ['React.js', 'Node.js', 'Express.js', 'MongoDB', 'JavaScript', 'UI/UX Design'] },
+  { logo: 'ZD', period: 'Jun 2026 – Aug 2026', role: 'Java Full Stack Intern', company: 'Zidio Development · Internship', big: 3, unit: 'Months',
+    desc: 'Built KEYSTONE, a field service management platform for work-order tracking, technician dispatch and SLA monitoring, using Java 21, Spring Boot 3, JWT/RBAC security and a React front end on a layered architecture.',
+    tags: ['Java', 'Spring Boot', 'Spring Security', 'React.js', 'PostgreSQL', 'REST APIs'],
+    links: [
+      ['Zidio Internship Certificate', 'https://drive.google.com/file/d/1aSgUZHomMTz77NatLRVtGwPSGMTbVdh6/view?usp=drive_link'],
+      ['Zidio Training Certificate', 'https://drive.google.com/file/d/1q0iRTzmzrr0dgNqXHvs_VwYsIrsLM-fJ/view?usp=drive_link'],
+      ['Zidio Experience Certificate', 'https://drive.google.com/file/d/1ayFHlQnGm2reLaBDG4QruW8CWVtke8FK/view?usp=drive_link'],
+      ['Zidio Letter of Recommendation', 'https://drive.google.com/file/d/12q9kHjTUz9ZgEh0M_S_0RB2kW9tQdO72/view?usp=drive_link'],
+    ] },
   { logo: 'TB', period: 'Mar 2024 – May 2024', role: 'Full Stack Web Developer Intern', company: 'Teckky Bench · Internship', big: 3, unit: 'Months',
     desc: 'Built a Fashion E-commerce web application with user authentication, product catalog, shopping cart, order tracking, and an admin dashboard.',
-    tags: ['React.js', 'Node.js', 'JavaScript', 'HTML/CSS', 'MySQL'] },
+    tags: ['React.js', 'Node.js', 'JavaScript', 'HTML/CSS', 'MySQL'],
+    links: [
+      ['Certification', 'https://drive.google.com/file/d/1E6Qc3uhSIXRm_SQ-qI4DxLxJUlbRlTBi/view?usp=drive_link'],
+    ] },
 ]
 
 const projects = [
@@ -565,6 +577,13 @@ export default function App() {
                 <p className="desc">{j.desc}</p>
                 <div className="tags">{j.tags.map((t) => <span className="tag" key={t}>{t}</span>)}</div>
                 {j.link && <a className="btn light" href={j.link} target="_blank" rel="noreferrer">View Project ↗</a>}
+                {j.links && (
+                  <div className="btn-row">
+                    {j.links.map(([label, url]) => (
+                      <a className="btn light" key={label} href={url} target="_blank" rel="noreferrer">{label} ↗</a>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="big"><strong>{typeof j.big === 'number' ? <Counter to={j.big} pad={2} /> : j.big}</strong><span>{j.unit}</span></div>
             </div>

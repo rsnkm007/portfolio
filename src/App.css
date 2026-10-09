@@ -563,3 +563,8 @@ html.intro .topbar { animation: intro-in 1s var(--ease) .15s backwards; }
 html.intro .marquee { animation: intro-in 1s var(--ease) .7s backwards; }
 html.intro:not(.land) .topbar, html.intro:not(.land) .marquee { animation-play-state: paused; }
 @keyframes intro-in { from { opacity: 0; translate: 0 -14px; } }
+
+
+/* Experience: certificate buttons (wrap neatly on every screen size) */
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.btn-row .btn.light { margin-top: 0; }

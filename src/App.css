@@ -577,9 +577,14 @@ html.intro:not(.land) .topbar, html.intro:not(.land) .marquee { animation-play-s
        left, right, bottom, top, centre, top-left corner. */
        .lt { font-style: normal; }
 
-       /* turn off the name's normal gradient while the intro runs (it comes back automatically when the intro ends) */
+       /* turn off the name's gradient while the intro runs (it comes back automatically when the intro ends).
+          IMPORTANT: only background-image is switched off (NOT the `background` shorthand, which would reset
+          background-clip and turn the contrast theme's gradient into a solid black box). !important makes this
+          win over the contrast/flip theme rules in every theme. */
        html.intro h1 span {
-         background: none;
+         background-image: none !important;
+         -webkit-background-clip: text;
+         background-clip: text;
          animation: none;
        }
        

@@ -27,7 +27,7 @@ const jobs = [
       ['Zidio Experience Certificate', 'https://drive.google.com/file/d/1ayFHlQnGm2reLaBDG4QruW8CWVtke8FK/view?usp=drive_link'],
       ['Zidio Letter of Recommendation', 'https://drive.google.com/file/d/12q9kHjTUz9ZgEh0M_S_0RB2kW9tQdO72/view?usp=drive_link'],
     ] },
-  { logo: 'TB', period: 'Mar 2024 – May 2024', role: 'Full Stack Web Developer Intern', company: 'Teckky Bench · Internship', big: 3, unit: 'Months',
+  { logo: 'TB', period: 'Mar 2024 – May 2024', role: 'Full Stack Web Developer Intern', company: 'TekkyBench · Internship', big: 3, unit: 'Months',
     desc: 'Built a Fashion E-commerce web application with user authentication, product catalog, shopping cart, order tracking, and an admin dashboard.',
     tags: ['React.js', 'Node.js', 'JavaScript', 'HTML/CSS', 'MySQL'],
     links: [
@@ -540,7 +540,7 @@ export default function App() {
               <a href="https://www.linkedin.com/in/nanda-kumar-m-78a816202/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><FaLinkedin /></a>
               <a href="https://twitter.com/rsnkm007" target="_blank" rel="noreferrer" aria-label="Twitter"><FaTwitter /></a>
               <a href="mailto:rsnkm007@gmail.com" aria-label="Email"><FaEnvelope /></a>
-              <a className="resume" href="https://drive.google.com/file/d/1AOKlsA6Bk9CY3hdJ218xmTdPSoJMJ4TK/view?usp=drive_link" target="_blank" rel="noreferrer"><FaDownload /> Resume</a>
+              <a className="resume" href="https://drive.google.com/file/d/1xy11V0JJ1rqKS6e7seOfQppJczePG-wh/view?usp=drive_link" target="_blank" rel="noreferrer"><FaDownload /> Resume</a>
             </div>
           </div>
           <div className="hero-card fade d3">
